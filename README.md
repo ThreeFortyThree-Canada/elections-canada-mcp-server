@@ -8,17 +8,23 @@ The server uses the 2021 Canadian federal election data stored in `datafiles/202
 
 ## Installation
 
-1. Install the required dependencies:
+Install the required dependencies using `uv`:
 
 ```bash
-pip install -r requirements.txt
+uv pip install -e .
+```
+
+For development dependencies:
+
+```bash
+uv pip install -e ".[dev]"
 ```
 
 ## Usage
 
 ### Running the Server
 
-To run the server in development mode:
+To run the server:
 
 ```bash
 python server.py
