@@ -171,117 +171,120 @@ def summarize_province_results(province_code: str) -> str:
         "seatsByParty": party_seats
     }, indent=2)
 
-# ---------------- General-Purpose Tool ------------------ #
-
+# Tool to query election data using LangChain's Pandas Agent
 @mcp.tool()
 def query_election_data(question: str) -> str:
-    """Answer flexible questions about election results using pandas.
+    """Answer flexible questions about election results using pandas and LangChain.
     For example: 'How many votes did the Liberals get in Newfoundland?'
+    
+    This function uses LangChain's Pandas Agent to interpret natural language questions
+    and execute pandas operations on the election data.
     """
-    import io
-    import contextlib
+    import os
+    import json
+    from dotenv import load_dotenv
+    from langchain_openai import ChatOpenAI
+    from langchain.agents.agent_types import AgentType
+    from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
     
-    # Common party codes for easier reference
-    party_codes = {
-        "liberal": "LPC", "liberals": "LPC", "lpc": "LPC",
-        "conservative": "CPC", "conservatives": "CPC", "cpc": "CPC",
-        "ndp": "NDP", "new democratic party": "NDP",
-        "bloc": "BQ", "bloc québécois": "BQ", "bq": "BQ",
-        "green": "GPC", "green party": "GPC", "gpc": "GPC",
-        "people's party": "PPC", "peoples party": "PPC", "ppc": "PPC"
-    }
+    # Load environment variables (for OpenAI API key)
+    load_dotenv()
     
-    # Common province codes
-    province_codes = {
-        "alberta": "AB", "ab": "AB",
-        "british columbia": "BC", "bc": "BC",
-        "manitoba": "MB", "mb": "MB",
-        "new brunswick": "NB", "nb": "NB",
-        "newfoundland": "NL", "newfoundland and labrador": "NL", "nl": "NL",
-        "northwest territories": "NT", "nt": "NT",
-        "nova scotia": "NS", "ns": "NS",
-        "nunavut": "NU", "nu": "NU",
-        "ontario": "ON", "on": "ON",
-        "prince edward island": "PE", "pei": "PE", "pe": "PE",
-        "quebec": "QC", "québec": "QC", "qc": "QC",
-        "saskatchewan": "SK", "sk": "SK",
-        "yukon": "YT", "yt": "YT"
-    }
-    
-    local_vars = {
-        "df": DF.copy(),
-        "question": question,
-        "party_codes": party_codes,
-        "province_codes": province_codes
-    }
-    
-    # Generate analysis code based on the question
-    analysis_code = """
-# Process the question
-question = question.lower()
-result = {}
-
-try:
-    # Check for party-related queries
-    for party_name, code in party_codes.items():
-        if party_name in question:
-            party_filter = df.partyCode == code
-            
-            # Check for province-related queries
-            for province_name, prov_code in province_codes.items():
-                if province_name in question:
-                    # Party votes in a specific province
-                    province_filter = df.province == prov_code
-                    filtered_df = df[party_filter & province_filter]
-                    
-                    if "seats" in question or "ridings" in question or "won" in question:
-                        # Count ridings won by the party in the province
-                        riding_winners = []
-                        for riding_code in filtered_df.ridingCode.unique():
-                            riding_df = df[df.ridingCode == riding_code]
-                            if not riding_df.empty:
-                                winner = riding_df.loc[riding_df.votes.idxmax()]
-                                if winner.partyCode == code:
-                                    riding_winners.append(riding_code)
-                        result[f"{code}_seats_in_{prov_code}"] = len(riding_winners)
-                    else:
-                        # Sum votes for the party in the province
-                        total_votes = filtered_df.votes.sum()
-                        result[f"{code}_votes_in_{prov_code}"] = int(total_votes)
-                    
-                    break
-            
-            # If no province specified, get national results
-            if not result and ("total" in question or "nationally" in question or "canada" in question):
-                total_votes = df[party_filter].votes.sum()
-                result[f"total_{code}_votes"] = int(total_votes)
-                
-                # Count seats won nationally
-                if "seats" in question or "ridings" in question or "won" in question:
-                    riding_winners = []
-                    for riding_code in df.ridingCode.unique():
-                        riding_df = df[df.ridingCode == riding_code]
-                        if not riding_df.empty:
-                            winner = riding_df.loc[riding_df.votes.idxmax()]
-                            if winner.partyCode == code:
-                                riding_winners.append(riding_code)
-                    result[f"{code}_seats_nationally"] = len(riding_winners)
-            
-            break
-    
-    # If no specific query matched, provide a summary
-    if not result:
-        result["note"] = "Could not parse specific query. Please try asking about votes or seats for a specific party, optionally in a specific province."
-except Exception as e:
-    result["error"] = str(e)
-
-print(json.dumps(result, indent=2))
-"""
+    # Check if OpenAI API key is available
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        return json.dumps({
+            "error": "OpenAI API key not found. Please set the OPENAI_API_KEY environment variable."
+        }, indent=2)
     
     try:
-        with contextlib.redirect_stdout(io.StringIO()) as output:
-            exec(analysis_code, local_vars)
-            return output.getvalue()
+        # Create a copy of the DataFrame with additional context
+        df = DF.copy()
+        
+        # Add helpful column descriptions as metadata
+        df_metadata = {
+            "ridingCode": "Unique identifier for each electoral riding",
+            "ridingName": "English name of the electoral riding",
+            "province": "Province code (e.g., 'ON' for Ontario)",
+            "partyCode": "Political party code (e.g., 'LPC' for Liberal Party of Canada)",
+            "votes": "Number of votes received by the party in this riding",
+            "votePercent": "Percentage of votes received by the party in this riding"
+        }
+        
+        # Common party codes for easier reference
+        party_codes = {
+            "LPC": "Liberal Party of Canada",
+            "CPC": "Conservative Party of Canada",
+            "NDP": "New Democratic Party",
+            "BQ": "Bloc Québécois",
+            "GPC": "Green Party of Canada",
+            "PPC": "People's Party of Canada"
+        }
+        
+        # Common province codes
+        province_codes = {
+            "AB": "Alberta",
+            "BC": "British Columbia",
+            "MB": "Manitoba",
+            "NB": "New Brunswick",
+            "NL": "Newfoundland and Labrador",
+            "NT": "Northwest Territories",
+            "NS": "Nova Scotia",
+            "NU": "Nunavut",
+            "ON": "Ontario",
+            "PE": "Prince Edward Island",
+            "QC": "Quebec",
+            "SK": "Saskatchewan",
+            "YT": "Yukon"
+        }
+        
+        # Create an LLM instance
+        llm = ChatOpenAI(temperature=0, model="gpt-4o")
+        
+        # Create a Pandas DataFrame agent
+        agent = create_pandas_dataframe_agent(
+            llm,
+            df,
+            verbose=False,
+            agent_type=AgentType.OPENAI_FUNCTIONS,
+            prefix=f"""
+            You are an expert data analyst working with Canadian election data.
+            The DataFrame contains election results from the 2021 Canadian federal election.
+            
+            Column descriptions:
+            {json.dumps(df_metadata, indent=2)}
+            
+            Party codes:
+            {json.dumps(party_codes, indent=2)}
+            
+            Province codes:
+            {json.dumps(province_codes, indent=2)}
+            
+            When analyzing the data:
+            1. For party-related queries, filter by the 'partyCode' column
+            2. For province-related queries, filter by the 'province' column
+            3. To find riding winners, group by ridingCode and find the party with max votes in each group
+            4. Return your results as a JSON object with clear keys and values
+            """
+        )
+        
+        # Run the agent to answer the question
+        result = agent.invoke({"input": question})
+        
+        # Extract the output
+        output = result.get("output", "No result found")
+        
+        # Try to parse the output as JSON if it looks like JSON
+        if output.strip().startswith("{") and output.strip().endswith("}"):
+            try:
+                parsed_json = json.loads(output)
+                return json.dumps(parsed_json, indent=2)
+            except json.JSONDecodeError:
+                pass
+        
+        # Return the raw output if it's not valid JSON
+        return output
+        
     except Exception as e:
         return json.dumps({"error": f"Failed to execute query: {str(e)}"}, indent=2)
 
