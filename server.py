@@ -1,5 +1,6 @@
 import json
 import os
+import pandas as pd
 from typing import Dict, List, Optional, Union
 from mcp.server.fastmcp import FastMCP
 
@@ -25,6 +26,21 @@ for riding in ELECTION_DATA:
         PROVINCE_LOOKUP[prov] = []
     PROVINCE_LOOKUP[prov].append(riding)
 
+# Create a pandas DataFrame for more complex queries
+DF = pd.DataFrame()
+vote_rows = []
+for riding in ELECTION_DATA:
+    for party_vote in riding["voteDistribution"]:
+        vote_rows.append({
+            "ridingCode": riding["ridingCode"],
+            "ridingName": riding["ridingName_EN"],
+            "province": riding["provCode"],
+            "partyCode": party_vote["partyCode"],
+            "votes": party_vote["votes"],
+            "votePercent": party_vote["votePercent"]
+        })
+DF = pd.DataFrame(vote_rows)
+
 # Resource to get all ridings
 @mcp.resource("elections-canada://ridings")
 def get_all_ridings() -> str:
@@ -44,7 +60,7 @@ def get_all_ridings() -> str:
 def get_riding(riding_code: int) -> str:
     """Get detailed information about a specific riding by its code."""
     if riding_code not in RIDING_LOOKUP:
-        return json.dumps({"error": f"Riding code {riding_code} not found"})
+        return json.dumps({"error": f"Riding code {riding_code} not found"}, indent=2)
     
     return json.dumps(RIDING_LOOKUP[riding_code], indent=2)
 
@@ -54,7 +70,7 @@ def get_province_ridings(province_code: str) -> str:
     """Get all ridings in a specific province by province code."""
     province_code = province_code.upper()
     if province_code not in PROVINCE_LOOKUP:
-        return json.dumps({"error": f"Province code {province_code} not found"})
+        return json.dumps({"error": f"Province code {province_code} not found"}, indent=2)
     
     return json.dumps(PROVINCE_LOOKUP[province_code], indent=2)
 
@@ -154,6 +170,120 @@ def summarize_province_results(province_code: str) -> str:
         "totalRidings": len(ridings),
         "seatsByParty": party_seats
     }, indent=2)
+
+# ---------------- General-Purpose Tool ------------------ #
+
+@mcp.tool()
+def query_election_data(question: str) -> str:
+    """Answer flexible questions about election results using pandas.
+    For example: 'How many votes did the Liberals get in Newfoundland?'
+    """
+    import io
+    import contextlib
+    
+    # Common party codes for easier reference
+    party_codes = {
+        "liberal": "LPC", "liberals": "LPC", "lpc": "LPC",
+        "conservative": "CPC", "conservatives": "CPC", "cpc": "CPC",
+        "ndp": "NDP", "new democratic party": "NDP",
+        "bloc": "BQ", "bloc québécois": "BQ", "bq": "BQ",
+        "green": "GPC", "green party": "GPC", "gpc": "GPC",
+        "people's party": "PPC", "peoples party": "PPC", "ppc": "PPC"
+    }
+    
+    # Common province codes
+    province_codes = {
+        "alberta": "AB", "ab": "AB",
+        "british columbia": "BC", "bc": "BC",
+        "manitoba": "MB", "mb": "MB",
+        "new brunswick": "NB", "nb": "NB",
+        "newfoundland": "NL", "newfoundland and labrador": "NL", "nl": "NL",
+        "northwest territories": "NT", "nt": "NT",
+        "nova scotia": "NS", "ns": "NS",
+        "nunavut": "NU", "nu": "NU",
+        "ontario": "ON", "on": "ON",
+        "prince edward island": "PE", "pei": "PE", "pe": "PE",
+        "quebec": "QC", "québec": "QC", "qc": "QC",
+        "saskatchewan": "SK", "sk": "SK",
+        "yukon": "YT", "yt": "YT"
+    }
+    
+    local_vars = {
+        "df": DF.copy(),
+        "question": question,
+        "party_codes": party_codes,
+        "province_codes": province_codes
+    }
+    
+    # Generate analysis code based on the question
+    analysis_code = """
+# Process the question
+question = question.lower()
+result = {}
+
+try:
+    # Check for party-related queries
+    for party_name, code in party_codes.items():
+        if party_name in question:
+            party_filter = df.partyCode == code
+            
+            # Check for province-related queries
+            for province_name, prov_code in province_codes.items():
+                if province_name in question:
+                    # Party votes in a specific province
+                    province_filter = df.province == prov_code
+                    filtered_df = df[party_filter & province_filter]
+                    
+                    if "seats" in question or "ridings" in question or "won" in question:
+                        # Count ridings won by the party in the province
+                        riding_winners = []
+                        for riding_code in filtered_df.ridingCode.unique():
+                            riding_df = df[df.ridingCode == riding_code]
+                            if not riding_df.empty:
+                                winner = riding_df.loc[riding_df.votes.idxmax()]
+                                if winner.partyCode == code:
+                                    riding_winners.append(riding_code)
+                        result[f"{code}_seats_in_{prov_code}"] = len(riding_winners)
+                    else:
+                        # Sum votes for the party in the province
+                        total_votes = filtered_df.votes.sum()
+                        result[f"{code}_votes_in_{prov_code}"] = int(total_votes)
+                    
+                    break
+            
+            # If no province specified, get national results
+            if not result and ("total" in question or "nationally" in question or "canada" in question):
+                total_votes = df[party_filter].votes.sum()
+                result[f"total_{code}_votes"] = int(total_votes)
+                
+                # Count seats won nationally
+                if "seats" in question or "ridings" in question or "won" in question:
+                    riding_winners = []
+                    for riding_code in df.ridingCode.unique():
+                        riding_df = df[df.ridingCode == riding_code]
+                        if not riding_df.empty:
+                            winner = riding_df.loc[riding_df.votes.idxmax()]
+                            if winner.partyCode == code:
+                                riding_winners.append(riding_code)
+                    result[f"{code}_seats_nationally"] = len(riding_winners)
+            
+            break
+    
+    # If no specific query matched, provide a summary
+    if not result:
+        result["note"] = "Could not parse specific query. Please try asking about votes or seats for a specific party, optionally in a specific province."
+except Exception as e:
+    result["error"] = str(e)
+
+print(json.dumps(result, indent=2))
+"""
+    
+    try:
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            exec(analysis_code, local_vars)
+            return output.getvalue()
+    except Exception as e:
+        return json.dumps({"error": f"Failed to execute query: {str(e)}"}, indent=2)
 
 if __name__ == "__main__":
     # Run the server in development mode

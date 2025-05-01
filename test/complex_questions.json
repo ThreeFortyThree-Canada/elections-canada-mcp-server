@@ -1,0 +1,32 @@
+[
+  {
+    "question": "How many ridings did the Liberals win in Ontario where the Conservative party came in second with more than 30% of the vote?"
+  },
+  {
+    "question": "Which province had the closest margin of victory between the winning party and the second-place party when averaged across all ridings?"
+  },
+  {
+    "question": "In ridings where the NDP finished third, what was their average vote percentage in Quebec compared to British Columbia?"
+  },
+  {
+    "question": "Which riding had the highest voter turnout (total votes as a percentage of eligible voters) and what party won that riding?"
+  },
+  {
+    "question": "How many seats did the Bloc Québécois win in Quebec ridings where they received between 30-40% of the vote, and how does this compare to the number of seats the Conservatives won in Alberta with the same vote percentage range?"
+  },
+  {
+    "question": "In ridings where the Green Party received more than 10% of the vote, what was the average performance of the People's Party of Canada?"
+  },
+  {
+    "question": "Which party had the most consistent vote percentage across all ridings in Canada, as measured by the standard deviation of their vote percentages?"
+  },
+  {
+    "question": "In urban ridings (those containing 'Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Ottawa', 'Edmonton', 'Winnipeg', or 'Halifax' in their names), how did the Liberal vote share compare to their performance in rural ridings?"
+  },
+  {
+    "question": "What was the total number of votes received by independent candidates across Canada, and in which riding did an independent candidate receive their highest vote percentage?"
+  },
+  {
+    "question": "If we define a 'battleground riding' as one where the difference between the first and second place parties was less than 5% of the vote, how many battleground ridings were there in each province, and which party won the most battleground ridings nationally?"
+  }
+]
