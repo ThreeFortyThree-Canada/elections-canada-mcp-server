@@ -293,4 +293,11 @@ if __name__ == "__main__":
     import mcp.cli
     import sys
     sys.argv = ["mcp", "dev"]
+    
+    # # Log server startup message
+    # mcp.request_context.session.send_log_message(
+    #   level="info",
+    #   data="Server started successfully",
+    # )
+    
     mcp.cli.app()
