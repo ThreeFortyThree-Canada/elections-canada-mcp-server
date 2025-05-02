@@ -1,32 +1,42 @@
 [
   {
-    "question": "How many ridings did the Liberals win in Ontario where the Conservative party came in second with more than 30% of the vote?"
+    "question": "How many ridings did the Liberals win in Ontario where the Conservative party came in second with more than 30% of the vote?",
+    "answer": "The Liberals won 37 ridings in Ontario where the Conservative party came in second with more than 30% of the vote."
   },
   {
-    "question": "Which province had the closest margin of victory between the winning party and the second-place party when averaged across all ridings?"
+    "question": "Which province had the closest margin of victory between the winning party and the second-place party when averaged across all ridings?",
+    "answer": "The province with the closest average margin of victory was NT with an average margin of 5.88% between the winning party and the runner-up across all ridings."
   },
   {
-    "question": "In ridings where the NDP finished third, what was their average vote percentage in Quebec compared to British Columbia?"
+    "question": "In ridings where the NDP finished third, what was their average vote percentage in Quebec compared to British Columbia?",
+    "answer": "In ridings where the NDP finished third, their average vote percentage was 11.74% in Quebec (16 ridings) compared to 20.48% in British Columbia (17 ridings)."
   },
   {
-    "question": "Which riding had the highest voter turnout (total votes as a percentage of eligible voters) and what party won that riding?"
+    "question": "Which riding had the highest voter turnout (total votes as a percentage of eligible voters) and what party won that riding?",
+    "answer": "The riding with the highest total votes was Ottawa Centre with 74672 votes. The LPC party won this riding."
   },
   {
-    "question": "How many seats did the Bloc Québécois win in Quebec ridings where they received between 30-40% of the vote, and how does this compare to the number of seats the Conservatives won in Alberta with the same vote percentage range?"
+    "question": "How many seats did the Bloc Québécois win in Quebec ridings where they received between 30-40% of the vote, and how does this compare to the number of seats the Conservatives won in Alberta with the same vote percentage range?",
+    "answer": "The Bloc Québécois won 5 seats in Quebec ridings where they received between 30-40% of the vote, compared to 2 seats that the Conservatives won in Alberta with the same vote percentage range."
   },
   {
-    "question": "In ridings where the Green Party received more than 10% of the vote, what was the average performance of the People's Party of Canada?"
+    "question": "In ridings where the Green Party received more than 10% of the vote, what was the average performance of the People's Party of Canada?",
+    "answer": "In the 6 ridings where the Green Party received more than 10% of the vote, the People's Party of Canada averaged 3.48% of the vote."
   },
   {
-    "question": "Which party had the most consistent vote percentage across all ridings in Canada, as measured by the standard deviation of their vote percentages?"
+    "question": "Which party had the most consistent vote percentage across all ridings in Canada, as measured by the standard deviation of their vote percentages?",
+    "answer": "The PPC had the most consistent vote percentage across Canada with a standard deviation of 3.12% around their mean of 4.83%."
   },
   {
-    "question": "In urban ridings (those containing 'Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Ottawa', 'Edmonton', 'Winnipeg', or 'Halifax' in their names), how did the Liberal vote share compare to their performance in rural ridings?"
+    "question": "In urban ridings (those containing 'Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Ottawa', 'Edmonton', 'Winnipeg', or 'Halifax' in their names), how did the Liberal vote share compare to their performance in rural ridings?",
+    "answer": "The Liberal party averaged 33.25% of the vote in 42 urban ridings, compared to 33.39% in 301 rural ridings, a difference of -0.15 percentage points."
   },
   {
-    "question": "What was the total number of votes received by independent candidates across Canada, and in which riding did an independent candidate receive their highest vote percentage?"
+    "question": "What was the total number of votes received by independent candidates across Canada, and in which riding did an independent candidate receive their highest vote percentage?",
+    "answer": "Independent candidates received a total of 25,603 votes across Canada. The highest vote percentage for an independent candidate was 13.60% in Yukon (YT)."
   },
   {
-    "question": "If we define a 'battleground riding' as one where the difference between the first and second place parties was less than 5% of the vote, how many battleground ridings were there in each province, and which party won the most battleground ridings nationally?"
+    "question": "If we define a 'battleground riding' as one where the difference between the first and second place parties was less than 5% of the vote, how many battleground ridings were there in each province, and which party won the most battleground ridings nationally?",
+    "answer": "There were 44 battleground ridings (margin < 5%) across Canada, distributed by province as follows: AB: 3, BC: 9, MB: 1, NB: 1, NL: 1, NS: 1, ON: 20, QC: 8. The LPC won the most battleground ridings with 21 wins."
   }
 ]
