@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "MCP server for Elections Canada data"
 readme = "README.md"
 requires-python = ">=3.12"
-license = {file = "LICENSE"}
+license = "MIT"
 authors = [
     {name = "Rohan Sampath"}
 ]
@@ -46,3 +46,7 @@ exclude = [".git", "__pycache__", "build", "dist"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
+
+[tool.setuptools]
+py-modules = ["server"]
+packages = []

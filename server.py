@@ -1,11 +1,17 @@
+# Feature flag to disable pandas operations and query_election_data
+DISABLE_PANDAS_OPERATIONS = True
+
 import json
 import os
-import pandas as pd
 from typing import Dict, List, Optional, Union
 from mcp.server.fastmcp import FastMCP
 
+# Only import pandas when the feature flag is disabled
+if not DISABLE_PANDAS_OPERATIONS:
+    import pandas as pd
+
 # Create an MCP server
-mcp = FastMCP("Elections Canada Data")
+mcp = FastMCP("elections_canada_data_and_predictions")
 
 # Path to the data file
 DATA_FILE = os.path.join(
@@ -26,20 +32,21 @@ for riding in ELECTION_DATA:
         PROVINCE_LOOKUP[prov] = []
     PROVINCE_LOOKUP[prov].append(riding)
 
-# Create a pandas DataFrame for more complex queries
-DF = pd.DataFrame()
-vote_rows = []
-for riding in ELECTION_DATA:
-    for party_vote in riding["voteDistribution"]:
-        vote_rows.append({
-            "ridingCode": riding["ridingCode"],
-            "ridingName": riding["ridingName_EN"],
-            "province": riding["provCode"],
-            "partyCode": party_vote["partyCode"],
-            "votes": party_vote["votes"],
-            "votePercent": party_vote["votePercent"]
-        })
-DF = pd.DataFrame(vote_rows)
+# Create a pandas DataFrame for more complex queries only if pandas operations are enabled
+DF = None
+if not DISABLE_PANDAS_OPERATIONS:
+    vote_rows = []
+    for riding in ELECTION_DATA:
+        for party_vote in riding["voteDistribution"]:
+            vote_rows.append({
+                "ridingCode": riding["ridingCode"],
+                "ridingName": riding["ridingName_EN"],
+                "province": riding["provCode"],
+                "partyCode": party_vote["partyCode"],
+                "votes": party_vote["votes"],
+                "votePercent": party_vote["votePercent"]
+            })
+    DF = pd.DataFrame(vote_rows)
 
 # Resource to get all ridings
 @mcp.resource("elections-canada://ridings")
@@ -180,6 +187,12 @@ def query_election_data(question: str) -> str:
     This function uses LangChain's Pandas Agent to interpret natural language questions
     and execute pandas operations on the election data.
     """
+    if DISABLE_PANDAS_OPERATIONS:
+        return json.dumps({
+            "error": "Pandas operations are currently disabled. Set DISABLE_PANDAS_OPERATIONS to False to enable this feature."
+        }, indent=2)
+    
+    # Only import these when the feature is enabled
     import os
     import json
     from dotenv import load_dotenv
@@ -292,12 +305,12 @@ if __name__ == "__main__":
     # Run the server in development mode
     import mcp.cli
     import sys
+    import logging
+    
+    # Configure logging for MCP server
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("elections-canada-mcp")
+    logger.info("Elections Canada MCP Server starting...")
+    
     sys.argv = ["mcp", "dev"]
-    
-    # # Log server startup message
-    # mcp.request_context.session.send_log_message(
-    #   level="info",
-    #   data="Server started successfully",
-    # )
-    
     mcp.cli.app()
