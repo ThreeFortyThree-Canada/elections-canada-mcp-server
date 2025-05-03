@@ -485,6 +485,98 @@ def summarize_national_results() -> str:
     
     return json.dumps(results, indent=2)
 
+# Tool to find the closest ridings by vote margin
+@mcp.tool()
+def find_closest_ridings(num_results: int = 10, party: Optional[str] = None) -> str:
+    """
+    Find the closest ridings in the 2021 Canadian federal election based on vote margin.
+    
+    This tool identifies competitive ridings where the difference between the winning party
+    and the runner-up was smallest, making them potential "battleground" ridings.
+    
+    Args:
+        num_results: Number of results to return (default: 10)
+        party: Optional party name or code (e.g., 'Liberal', 'LPC', 'Conservative', 'CPC').
+               If provided, only shows close ridings won by this party.
+    
+    Returns:
+        JSON with the closest ridings sorted by both raw vote margin and percentage margin,
+        including details about the winner and runner-up in each riding.
+    """
+    logger.info(f"Finding closest ridings{f' won by {party}' if party else ''}")
+    
+    # Get standardized party code if provided
+    party_code = get_party_code(party) if party else None
+    
+    # Calculate margins for all ridings
+    riding_margins = []
+    for riding in ELECTION_DATA:
+        riding_code = riding["ridingCode"]
+        riding_name = riding["ridingName_EN"]
+        province = riding["provCode"]
+        province_name = PROVINCE_CODE_TO_NAME.get(province, province)
+        
+        vote_distribution = riding["voteDistribution"]
+        if not vote_distribution or len(vote_distribution) < 2:
+            continue  # Skip ridings with insufficient data
+        
+        # Sort parties by votes to find winner and runner-up
+        sorted_parties = sorted(vote_distribution, key=lambda x: x["votes"], reverse=True)
+        winner = sorted_parties[0]
+        runner_up = sorted_parties[1]
+        
+        # Skip if we're filtering by party and this riding wasn't won by that party
+        if party_code and winner["partyCode"] != party_code:
+            continue
+            
+        # Calculate margins
+        vote_margin = winner["votes"] - runner_up["votes"]
+        percent_margin = winner["votePercent"] - runner_up["votePercent"]
+        
+        riding_margins.append({
+            "ridingCode": riding_code,
+            "ridingName": riding_name,
+            "province": province,
+            "provinceName": province_name,
+            "winner": {
+                "partyCode": winner["partyCode"],
+                "partyName": PARTY_CODE_TO_NAME.get(winner["partyCode"], winner["partyCode"]),
+                "votes": winner["votes"],
+                "votePercent": winner["votePercent"]
+            },
+            "runnerUp": {
+                "partyCode": runner_up["partyCode"],
+                "partyName": PARTY_CODE_TO_NAME.get(runner_up["partyCode"], runner_up["partyCode"]),
+                "votes": runner_up["votes"],
+                "votePercent": runner_up["votePercent"]
+            },
+            "voteMargin": vote_margin,
+            "percentMargin": percent_margin,
+            "totalVotes": riding.get("validVotes", sum(p["votes"] for p in vote_distribution))
+        })
+    
+    # Sort by percentage margin (closest first)
+    by_percent_margin = sorted(riding_margins, key=lambda x: x["percentMargin"])[:num_results]
+    
+    # Sort by raw vote margin (closest first)
+    by_vote_margin = sorted(riding_margins, key=lambda x: x["voteMargin"])[:num_results]
+    
+    # Create result object
+    result = {
+        "totalRidingsAnalyzed": len(riding_margins),
+        "closestByPercentMargin": by_percent_margin,
+        "closestByVoteMargin": by_vote_margin
+    }
+    
+    # Add party filter info if applicable
+    if party_code:
+        result["partyFilter"] = {
+            "partyCode": party_code,
+            "partyName": PARTY_CODE_TO_NAME.get(party_code, party_code)
+        }
+    
+    return json.dumps(result, indent=2)
+
 # Tool to get best and worst results for a party
 @mcp.tool()
 def best_and_worst_results(party: str, num_entries: int = 10) -> str:
