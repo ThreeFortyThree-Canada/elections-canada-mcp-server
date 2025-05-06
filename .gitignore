@@ -133,5 +133,10 @@ dmypy.json
 *.log
 *.sqlite
 
+# Test directory
+/test/
+test/
+
 # Documentation for Claude
 documentation_for_claude/
+Documentation_for_Claude/

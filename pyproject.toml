@@ -44,5 +44,8 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 
 [tool.setuptools]
-py-modules = ["server"]
-packages = []
+py-modules = []
+packages = ["elections_canada_mcp"]
+
+[project.scripts]
+elections-canada-mcp = "main:main"

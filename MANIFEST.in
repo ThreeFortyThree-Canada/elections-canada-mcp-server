@@ -1,0 +1,3 @@
+include datafiles/*.csv
+include README.md
+include LICENSE
