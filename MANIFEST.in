@@ -1,3 +1,4 @@
 include datafiles/*.csv
+include datafiles/*.json
 include README.md
 include LICENSE

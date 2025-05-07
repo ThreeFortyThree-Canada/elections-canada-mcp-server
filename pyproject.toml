@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elections_canada_mcp_server"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for Elections Canada data"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -14,12 +14,26 @@ authors = [
 ]
 dependencies = [
     "mcp[cli]>=1.6.0",
-    "fastapi>=0.95.0",
+    "fastapi==0.110.0",
     "uvicorn>=0.21.1",
     "pydantic>=1.10.7",
     "python-dotenv>=1.0.0",
     "pandas>=2.0.0",
 ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ThreeFortyThree-Canada/elections-canada-mcp-server"
 
 [project.optional-dependencies]
 dev = [
@@ -48,4 +62,4 @@ py-modules = []
 packages = ["elections_canada_mcp"]
 
 [project.scripts]
-elections-canada-mcp = "main:main"
+elections-canada-mcp = "elections_canada_mcp.server:main"

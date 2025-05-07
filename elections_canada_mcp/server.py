@@ -440,15 +440,11 @@ def best_and_worst_results(party: str, num_entries: int = 10):
         "worstByLosingMargin": worst_by_margin
     }, indent=2)
 
-if __name__ == "__main__":
+def main():
+    """Entry point for the elections-canada-mcp command."""
     import mcp.cli
     import sys
-    
-    # Configure logging for MCP server (already configured at the top)
-    logger.info("Elections Canada MCP Server starting...")
-    
-    # Run the server with the current file
-    import os
-    current_file = os.path.abspath(__file__)
-    sys.argv = ["mcp", "dev", current_file]
-    mcp.cli.app()
+    mcp.cli.main(mcp, sys.argv[1:])
+
+if __name__ == "__main__":
+    main()
