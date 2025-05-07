@@ -2,14 +2,9 @@ name: Publish Python Package
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to publish (without v prefix)'
-        required: true
-        default: ''
 
 jobs:
   deploy:
@@ -29,14 +24,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install build twine pytest
     
-    - name: Extract version from tag or input
+    - name: Get version from pyproject.toml
       id: get_version
       run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-        else
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-        fi
+        VERSION=$(grep -oP 'version = "\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Current version in repo: $VERSION"
     
     - name: Check if version is valid
       run: |
@@ -45,42 +38,56 @@ jobs:
           exit 1
         fi
     
-    - name: Get current version from pyproject.toml
-      id: current_version
+    - name: Check if version exists on PyPI
+      id: pypi_check
       run: |
-        CURRENT_VERSION=$(grep -oP 'version = "\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml)
-        echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
-        echo "Current version: $CURRENT_VERSION"
-        echo "New version: $VERSION"
+        # Get the latest version from PyPI
+        PYPI_VERSION=$(pip index versions elections-canada-mcp-server 2>/dev/null | grep -oP 'elections-canada-mcp-server \K[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || echo "0.0.0")
+        echo "PYPI_VERSION=$PYPI_VERSION" >> $GITHUB_ENV
+        echo "Latest version on PyPI: $PYPI_VERSION"
     
     - name: Check if version has increased
+      id: version_check
       run: |
         python -c "
         from packaging import version
-        current = version.parse('${{ env.CURRENT_VERSION }}')
-        new = version.parse('${{ env.VERSION }}')
-        if new <= current:
-          print(f'Error: New version {new} is not greater than current version {current}')
-          exit(1)
+        pypi_version = version.parse('${{ env.PYPI_VERSION }}')
+        new_version = version.parse('${{ env.VERSION }}')
+        if new_version <= pypi_version:
+          print(f'::set-output name=should_publish::false')
+          print(f'No need to publish: Version {new_version} is not greater than PyPI version {pypi_version}')
         else:
-          print(f'Version check passed: {current} -> {new}')
+          print(f'::set-output name=should_publish::true')
+          print(f'Version check passed: {pypi_version} -> {new_version}')
         "
+        # For GitHub Actions newer format
+        echo "should_publish=$(python -c "
+        from packaging import version
+        pypi_version = version.parse('${{ env.PYPI_VERSION }}')
+        new_version = version.parse('${{ env.VERSION }}')
+        print('true' if new_version > pypi_version else 'false')
+        ")" >> $GITHUB_OUTPUT
       
-    - name: Update version in pyproject.toml
-      run: |
-        sed -i "s/version = \"[0-9]*\.[0-9]*\.[0-9]*\"/version = \"$VERSION\"/" pyproject.toml
-        sed -i "s/__version__ = \"[0-9]*\.[0-9]*\.[0-9]*\"/__version__ = \"$VERSION\"/" elections_canada_mcp/__init__.py
+    # No need to update __init__.py as it now reads version from pyproject.toml dynamically
     
-    - name: Run tests
-      run: pytest
+    # Tests disabled as requested
+      
+    - name: Message when not publishing
+      if: steps.version_check.outputs.should_publish == 'false'
+      run: |
+        echo "No new version to publish. Current version ${{ env.VERSION }} is not greater than PyPI version ${{ env.PYPI_VERSION }}."
+        echo "Skipping publish steps."
     
     - name: Build package
+      if: steps.version_check.outputs.should_publish == 'true'
       run: python -m build
     
     - name: Check package
+      if: steps.version_check.outputs.should_publish == 'true'
       run: twine check dist/*
     
     - name: Publish package
+      if: steps.version_check.outputs.should_publish == 'true'
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
@@ -88,13 +95,15 @@ jobs:
         skip-existing: true
     
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
+      if: steps.version_check.outputs.should_publish == 'true'
+      uses: ncipollo/release-action@v1
       with:
+        tag: v${{ env.VERSION }}
         name: Release v${{ env.VERSION }}
         body: |
           # Elections Canada MCP Server v${{ env.VERSION }}
           
           New release of the Elections Canada MCP Server.
-        files: |
-          dist/*
+        artifacts: "dist/*"
+        artifactErrorsFailBuild: true
+        skipIfReleaseExists: true

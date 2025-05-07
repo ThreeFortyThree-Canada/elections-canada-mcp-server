@@ -14,12 +14,6 @@ Brought to you by [ThreeFortyThree](https://threefortythree.ca), this server pow
 uv pip install elections-canada-mcp-server
 ```
 
-To install development dependencies:
-
-```bash
-uv pip install 'elections-canada-mcp-server[dev]'
-```
-
 ---
 
 ### Usage with Claude Desktop
@@ -56,11 +50,23 @@ uv pip install elections-canada-mcp-server
 
 ### Local Development
 
-To test the server using MCP Inspector:
+To test the server using [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector):
 
-```bash
-mcp dev elections_canada_mcp_server/server.py
-```
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/ThreeFortyThree-Canada/elections-canada-mcp-server.git
+   cd elections-canada-mcp-server
+   ```
+
+2. Install MCP CLI:
+   ```bash
+   uv pip install mcp
+   ```
+
+3. Test the server:
+   ```bash
+   mcp dev elections_canada_mcp/server.py
+   ```
 
 This opens a web UI to test the server locally.
 
