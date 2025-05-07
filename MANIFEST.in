@@ -1,4 +1,4 @@
-include datafiles/*.csv
-include datafiles/*.json
+include elections_canada_mcp/datafiles/*.csv
+include elections_canada_mcp/datafiles/*.json
 include README.md
 include LICENSE

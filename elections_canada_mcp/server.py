@@ -53,7 +53,7 @@ mcp = FastMCP("elections_canada_data_and_predictions")
 
 # Path to the data file
 DATA_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+    os.path.dirname(os.path.abspath(__file__)), 
     "datafiles/2021_riding_vote_redistributed_ElectionsCanada.json"
 )
 
