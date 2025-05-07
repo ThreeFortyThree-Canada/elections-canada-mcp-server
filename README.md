@@ -1,8 +1,8 @@
 # Elections Canada MCP Server
 
-This is a Model Context Protocol (MCP) server that provides access to Canadian federal election data. It currently supports results from the 2021 election, redistributed to the 2023 riding boundaries. Future updates will include past elections, census demographics, and real-time projections.
+This is a Model Context Protocol (MCP) server that provides access to Canadian federal election data. It currently supports results from the 2021 and 2025 elections. Future updates will include past elections, census demographics, and ThreeFortyThree real-time projections.
 
-Brought to you by [ThreeFortyThree](https://threefortythree.ca), this server powers [ThreeFortyThree Chat](https://threefortythree.ca/chat) and is available for use with local models via Claude Desktop.
+Brought to you by [ThreeFortyThree](https://threefortythree.ca), this server powers [ThreeFortyThree Chat](https://threefortythree.ca/chat) and is available for use with MCP clients such as Claude Desktop.
 
 ---
 
@@ -38,8 +38,8 @@ uv pip install elections-canada-mcp-server
 {
   "mcpServers": {
     "elections_canada_data_and_predictions": {
-      "command": "uv",
-      "args": ["run", "elections-canada-mcp"]
+      "command": "{PATH_TO_UVX}",  // Replace with output of: which uvx
+      "args": ["elections-canada-mcp"]
     }
   }
 }
