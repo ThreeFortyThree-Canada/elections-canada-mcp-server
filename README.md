@@ -32,18 +32,22 @@ uv pip install elections-canada-mcp-server
 
 2. Open your `claude_desktop_config.json` and add the following block:
 
+#### uv
+
 ```json
 {
-  "elections_canada_data": {
-    "command": "uv",
-    "args": ["run", "elections-canada-mcp"]
+  "mcpServers": {
+    "elections_canada_data_and_predictions": {
+      "command": "uv",
+      "args": ["run", "elections-canada-mcp"]
+    }
   }
 }
 ```
 
 3. Restart Claude Desktop.
 
-4. Now you can ask Claude questions like:
+4. Now you can ask Claude questions such as:
    - "What were the 2021 election results in Toronto Centre?"
    - "Which ridings were closest for the NDP?"
    - "Show me the highest-margin wins for the Conservatives in 2021."
