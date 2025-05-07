@@ -25,13 +25,13 @@ import sys
 import logging
 
 # Import utility functions and constants
-from .utils import (
+from elections_canada_mcp.utils import (
     normalize_text,
     get_province_code,
     get_party_code,
     summarize_results
 )
-from .constants import (
+from elections_canada_mcp.constants import (
     PARTY_CODE_TO_NAME,
     PROVINCE_CODE_TO_NAME
 )

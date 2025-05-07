@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elections_canada_mcp_server"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCP server for Elections Canada data"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -61,4 +61,4 @@ py-modules = []
 packages = ["elections_canada_mcp"]
 
 [project.scripts]
-elections-canada-mcp = "elections_canada_mcp.server:main"
+elections_canada_server = "elections_canada_mcp.server:main"
