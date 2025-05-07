@@ -41,8 +41,30 @@ jobs:
     - name: Check if version exists on PyPI
       id: pypi_check
       run: |
-        # Get the latest version from PyPI
-        PYPI_VERSION=$(pip index versions elections-canada-mcp-server 2>/dev/null | grep -oP 'elections-canada-mcp-server \K[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || echo "0.0.0")
+        # Install the package that helps with PyPI queries
+        pip install packaging requests
+        
+        # Use Python to get the latest version from PyPI more reliably
+        PYPI_VERSION=$(python - <<EOF
+        import requests
+        import json
+        try:
+            response = requests.get('https://pypi.org/pypi/elections-canada-mcp-server/json')
+            if response.status_code == 200:
+                data = response.json()
+                print(data['info']['version'])
+            else:
+                print('0.0.0')  # Package not found or other error
+        except Exception as e:
+            print('0.0.0')  # Error occurred
+        EOF
+        )
+        
+        # If empty, set to 0.0.0
+        if [ -z "$PYPI_VERSION" ]; then
+          PYPI_VERSION="0.0.0"
+        fi
+        
         echo "PYPI_VERSION=$PYPI_VERSION" >> $GITHUB_ENV
         echo "Latest version on PyPI: $PYPI_VERSION"
     

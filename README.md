@@ -8,7 +8,7 @@ Brought to you by [ThreeFortyThree](https://threefortythree.ca), this server pow
 
 ## 🛠 Setup
 
-### Installation (via PyPI)
+### Installation (via [PyPI](https://pypi.org/project/elections-canada-mcp-server/))
 
 ```bash
 uv pip install elections-canada-mcp-server
