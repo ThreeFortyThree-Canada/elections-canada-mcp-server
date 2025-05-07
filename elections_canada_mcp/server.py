@@ -23,6 +23,10 @@ from typing import Dict, List, Optional, Union
 from mcp.server.fastmcp import FastMCP
 import sys
 import logging
+import importlib.util
+
+# Add the project root to the Python path to make imports work when run directly
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
 
 # Import utility functions and constants
 from elections_canada_mcp.utils import (
